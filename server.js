@@ -1,4 +1,4 @@
-import express from "express";
+import express, { response } from "express";
 import mysql from "mysql";
 import cors from "cors";
 import jwt from "jsonwebtoken";
@@ -27,6 +27,29 @@ app.post("/register", (req, res) => {
       if (err) return res.json({ Error: "Inserting data Error in Server" });
       return res.json({ Status: "Succes" });
     });
+  });
+});
+
+app.post("/login", (req, res) => {
+  const sql = "SELECT * FROM login WHERE email = ?";
+  db.query(sql, [req.body.email], (err, data) => {
+    if (err) return res.json({ Error: "Login Errror in Server" });
+    if (data.length > 0) {
+      bcrypt.compare(
+        req.body.password.toString(),
+        data[0].password,
+        (err, response) => {
+          if (err) return res.json({ Error: "Password compare Error" });
+          if (response) {
+            return res.json({ Status: "Success" });
+          } else {
+            return res.json({ Error: "Password not Matched" });
+          }
+        }
+      );
+    } else {
+      return res.json({ Error: "No Email Existed" });
+    }
   });
 });
 
