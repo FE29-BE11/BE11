@@ -1,9 +1,10 @@
 import express, { response } from "express";
 import mysql from "mysql";
 import cors from "cors";
-import jwt from "jsonwebtoken";
+import jwt, { decode } from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import cookieParser from "cookie-parser";
+import res from "express/lib/response";
 const salt = 10;
 
 const app = express();
@@ -22,6 +23,26 @@ const db = mysql.createConnection({
   user: "root",
   password: "",
   database: "server",
+});
+
+const verifyUser = (req, res, next) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.json({ Error: "You are Not Authenticated" });
+  } else {
+    jwt.verify(token, "jwt-secret-key", (err, decoded) => {
+      if (err) {
+        return res.json({ Error: "Token is not Okey" });
+      } else {
+        req.name = decoded.name;
+        next();
+      }
+    });
+  }
+};
+
+app.get("/", verifyUser, (req, res) => {
+  return res.json({ Status: "Success", name: req.name });
 });
 
 app.post("/register", (req, res) => {
